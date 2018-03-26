@@ -1,0 +1,14 @@
+{application, scrapper,
+ [{description, "Scrap Data"},
+  {vsn, "1.0.0"},
+  {registered, []},
+  {mod, {scrapper, []}},
+  {applications, [
+    kernel,
+    stdlib,
+    hackney,
+    erlcron
+  ]},
+  {env,[]},
+  {modules, []}
+ ]}.
