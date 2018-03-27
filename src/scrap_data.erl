@@ -44,19 +44,37 @@ handle_call(_Request, _From, State) ->
 -spec handle_cast(term(), any()) -> {noreply, any()}.
 handle_cast(scrap, State) ->
   erlang:display(scrapper_working),
-  send_request(),
+  {ok, Settings} = application:get_env(scrapper, scrap_urls),
+  #{volatiledata := Volatilehost} = Settings,
+  Date = get_current_date(),
+  VolatileUrl = <<Volatilehost/binary, "CMVOLT_", Date/binary, ".CSV">>,
+  send_request(<<"Volatile_", Date/binary>>, VolatileUrl),
   {noreply, State}.
 
 -spec terminate(term(), term()) -> ok.
 terminate(Reason, _State) ->
-  lager:error("process terminated ~p", [Reason]).
+  erlang:display({terminated, Reason}).
 
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
 
-send_request() ->
-  Url = <<"https://www.nseindia.com/archives/nsccl/volt/CMVOLT_20032018.CSV">>,
-  {ok, 200, _H, Body} = hackney:get(Url, [], [], [with_body]),
-  A = file:write_file(<<"test.csv">>, io_lib:fwrite("~s", [Body])),
-  erlang:display(A).
+send_request(Filename, Url) ->
+  case hackney:get(Url, [], [], [with_body]) of
+    {ok, 200, _H, Body} ->
+      file:write_file(Filename, io_lib:fwrite("~s", [Body]));
+    Error ->
+      erlang:display(Error)
+  end.
+
+%% private
+get_current_date() ->
+  {YYYY, MM, DD} = erlang:date(),
+  CurrentDate = format(DD) ++ format(MM) ++ format(YYYY),
+  list_to_binary(CurrentDate).
+
+%% private
+format(Number) when Number < 10 ->
+  "0" ++ integer_to_list(Number);
+format(Number) ->
+  integer_to_list(Number).
