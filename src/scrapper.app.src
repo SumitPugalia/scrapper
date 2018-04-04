@@ -7,7 +7,8 @@
     kernel,
     stdlib,
     hackney,
-    erlcron
+    erlcron,
+    mysql
   ]},
   {env,[]},
   {modules, []}
